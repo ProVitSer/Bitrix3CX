@@ -3,7 +3,7 @@ const log4js = require(`log4js`);
 
 log4js.configure({
     appenders: {
-        voip: {
+        bitrix: {
             type: `file`,
             filename: `logs/debug.log`,
             maxLogSize: 10485760,
