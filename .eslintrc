@@ -1,0 +1,17 @@
+{
+    "extends": "airbnb",
+    "env": {
+    "node": true,
+    "es6": true,
+    "browser": true
+    },
+    "rules": {
+        "space-before-function-paren": ["error", "never"],
+        "operator-linebreak":  [2, "after"],
+        "linebreak-style": ["error", "windows"],
+        "indent": ["error", 4],
+        "eqeqeq": [0, "smart"],
+        "max-len": ["error", { "code": 330 }],
+        "eol-last": ["error", "never"],
+        "default-case": 0    }
+}
