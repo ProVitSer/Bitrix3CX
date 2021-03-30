@@ -37,7 +37,7 @@ const sendAmiCall = (bitrixId, localExtension, outgoingNumber) => {
     action.context = 'RouteToLocalWebHookCall';
     // action.exten = `${outgoingNumber.slice(1)}`;
     action.exten = outgoingNumber;
-    action.variable = `var1=${localExtension}`;
+    action.variable = `var1=${outgoingNumber},var2=${localExtension}`;
     action.async = 'yes';
     logger.info(action);
     nami.send(action, (response) => {
