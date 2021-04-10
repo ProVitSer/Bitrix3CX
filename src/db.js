@@ -4,7 +4,9 @@ const low = require('lowdb'),
     FileSync = require('lowdb/adapters/FileSync'),
     adapter = new FileSync('./db.json'),
     db = low(adapter),
-    util = require('util');
+    util = require('util'),
+    logger = require('../logger/logger');
+
 
 db.defaults({ department: [], users: [] })
     .write();
@@ -17,10 +19,10 @@ const insertInfoToDB = (type = 'department', data) => new Promise((resolve, reje
             .push(data)
             .write();
         if (!insertInDB) {
-            console.log('[DB] Insert Error!', insertInDB);
+            logger.error(`[DB] Insert Error!${util.inspect(insertInDB)}`);
             reject('[DB] Error!', insertInDB);
         } else {
-            console.log('[DB] Insert: ', insertInDB);
+            logger.info(`[DB] Insert:  ${util.inspect(insertInDB)}`);
             resolve(insertInDB)
         }
     } catch (e) {
@@ -35,10 +37,10 @@ const deleteRule = (type = 'department', departmentId) => new Promise((resolve, 
         .remove({ departmentId })
         .write();
     if (!deleteRecords) {
-        console.log('[DB] Delete Error!', deleteRecords);
+        logger.error(`[DB] Delete Error! ${util.inspect(deleteRecords)}`);
         reject('[DB] Delete Error!', deleteRecords);
     } else {
-        console.log('[DB] Удаление: ', departmentId);
+        logger.info(`[DB] Удаление:  ${util.inspect(departmentId)}`);
         resolve(deleteRecords)
     }
 })
@@ -47,10 +49,10 @@ const removeProp = (type = 'user') => new Promise((resolve, reject) => {
     const resultRemoveProp = db.unset(type)
         .write()
     if (!resultRemoveProp) {
-        console.log('[DB] Delete Error!', resultRemoveProp);
+        logger.error(`[DB] Delete Error! ${util.inspect(resultRemoveProp)}`);
         reject('[DB] Delete Error!', resultRemoveProp);
     } else {
-        console.log('[DB] Удаление: ', resultRemoveProp);
+        logger.info(`[DB] Удаление:  ${util.inspect(resultRemoveProp)}`);
         resolve(resultRemoveProp)
     }
 })
@@ -60,7 +62,7 @@ const getAllInfoByType = (type = 'department') => new Promise((resolve, reject) 
         .remove({})
         .write()
     if (!getInfo) {
-        console.log('[DB] GetAllInfo Error!', getInfo);
+        logger.error(`[DB] GetAllInfo Error! ${util.inspect(getInfo)}`);
         reject('[DB] GetAllInfo Error!', getInfo)
     } else {
         resolve(getInfo)
@@ -71,22 +73,58 @@ const setEmptyProp = (type = 'users') => new Promise((resolve, reject) => {
     const resultSetProp = db.set(type, [])
         .write()
     if (!resultSetProp) {
-        console.log('[DB] setEmptyProp Error!', resultSetProp);
+        logger.error(`[DB] setEmptyProp Error! ${util.inspect(resultSetProp)}`);
         reject('[DB] setEmptyProp Error!', resultSetProp)
     } else {
         resolve(resultSetProp)
     }
 })
 
-const testAAA = (type = 'users', exten) => new Promise((resolve, reject) => {
-    const resultSetProp = db.get(type)
+const getBitrixIdByExten = (exten, type = 'users') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
         .find({ exten: exten })
         .value()
-    if (!resultSetProp) {
-        console.log('[DB] setEmptyProp Error!', resultSetProp);
-        reject('[DB] setEmptyProp Error!', resultSetProp)
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска ID Битрикс для добавочного ${exten} ${util.inspect(resultSearch)}`);
+        resolve(undefined)
     } else {
-        resolve(resultSetProp)
+        resolve(resultSearch.id)
+    }
+})
+
+const getExtenByBitrixId = (id, type = 'users') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
+        .find({ id: id })
+        .value()
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска внутреннего номера для Bitrix ID  ${id} ${util.inspect(resultSearch)}`);
+        reject('[DB] getExtenByBitrixId Error!', resultSearch)
+    } else {
+        resolve(resultSearch.exten)
+    }
+})
+
+const getDepartmentIdByCallId = (callId, type = 'department') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
+        .find({ trunkNumber: callId })
+        .value()
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка ${id} ${util.inspect(resultSearch)}`);
+        reject('[DB] getDepartmentIdByCallId Error!', resultSearch)
+    } else {
+        resolve(resultSearch.id)
+    }
+})
+
+const getTypeCallProcessing = (callId, type = 'department') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
+        .find({ trunkNumber: callId })
+        .value()
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка ${id} ${util.inspect(resultSearch)}`);
+        reject('[DB] getDepartmentIdByCallId Error!', resultSearch)
+    } else {
+        resolve(resultSearch.callProcessing)
     }
 })
 
@@ -96,5 +134,8 @@ module.exports = {
     deleteRule,
     removeProp,
     setEmptyProp,
-    testAAA
+    getBitrixIdByExten,
+    getExtenByBitrixId,
+    getDepartmentIdByCallId,
+    getTypeCallProcessing
 }

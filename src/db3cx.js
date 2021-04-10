@@ -65,5 +65,16 @@ async function searchLastUserRing(end3CXId) {
     }
 };
 
+async function search3cxQueueCall(incomingNumber) {
+    try {
+        incomingNumber = incomingNumber.trim();
+        let callInfo = await db.any(`SELECT to_dialednum FROM public.callcent_queuecalls where from_userpart like '%${incomingNumber}'  ORDER BY idcallcent_queuecalls DESC LIMIT 1;`);
+        logger.info(`search3cxQueueCall ${util.inspect(callInfo)}`);
+        return callInfo;
+    } catch (e) {
+        return e;
+    }
+};
 
-module.exports = { searchFirstIncomingId, searchIncomingCallId, searchEndIncomingId, searchCallInfo, searchLastUserRing, searchIncomingInfoByLocalCall };
+
+module.exports = { searchFirstIncomingId, searchIncomingCallId, searchEndIncomingId, searchCallInfo, searchLastUserRing, searchIncomingInfoByLocalCall, search3cxQueueCall };

@@ -7,10 +7,11 @@ const axios = require('axios'),
 
 
 class Bitrix {
-    constructor(recordIp = config.bitrix.recordIp, domain = config.bitrix.domain, hash = config.bitrix.hash) {
+    constructor(recordIp = config.bitrix.recordIp, domain = config.bitrix.domain, hash = config.bitrix.hash, departmentName = config.bitrix.departmentName) {
         this.recordIp = recordIp;
         this.domain = domain;
         this.hash = hash;
+        this.departmentName = departmentName;
         this.config = {
             headers: {
                 'User-Agent': 'voipnotes/0.0.1',
@@ -27,7 +28,7 @@ class Bitrix {
         if (!result) {
             return [];
         }
-        return result.data.result
+        return result.data
     }
 
     async searchUser(...params) {
@@ -36,7 +37,8 @@ class Bitrix {
         };
 
         try {
-            let result = await this.sendAxios('telephony.externalCall.searchCrmEntities', json)
+            let { result } = await this.sendAxios('telephony.externalCall.searchCrmEntities', json)
+            logger.info(`Результат поиска входящего лида ${util.inspect(result)}`);
             return result;
         } catch (e) {
             return e;
@@ -54,7 +56,8 @@ class Bitrix {
         };
         logger.info(json);
         try {
-            let result = await this.sendAxios('telephony.externalcall.register.json', json)
+            let { result } = await this.sendAxios('telephony.externalcall.register.json', json)
+            logger.info(`Результат регистрации вызова ${util.inspect(result)}`);
             return result;
         } catch (e) {
             return e;
@@ -73,7 +76,8 @@ class Bitrix {
         logger.info(json);
 
         try {
-            let result = await this.sendAxios('telephony.externalcall.finish', json)
+            let { result } = await this.sendAxios('telephony.externalcall.finish', json)
+            logger.info(`Результат завершения вызова ${util.inspect(result)}`);
             return result;
         } catch (e) {
             return e;
@@ -94,7 +98,8 @@ class Bitrix {
         }
 
         try {
-            let result = await this.sendAxios('tasks.task.add', json)
+            let { result } = await this.sendAxios('tasks.task.add', json)
+            logger.info(`Результат создания задачи  ${util.inspect(result)}`);
             return result;
         } catch (e) {
             return e;
@@ -107,7 +112,7 @@ class Bitrix {
         }
 
         try {
-            let result = await this.sendAxios('tasks.task.get', json)
+            let { result } = await this.sendAxios('tasks.task.get', json)
             if (result.task.status == '2') {
                 logger.info(`Задача просрочена ${params[0]}`);
                 this.updateTaskResponsibleId(params[0]);
@@ -128,7 +133,7 @@ class Bitrix {
         }
 
         try {
-            let result = await this.sendAxios('tasks.task.update', json)
+            let { result } = await this.sendAxios('tasks.task.update', json)
             logger.info(`Изменение ответственного по задаче ${util.inspect(result)}`);
 
         } catch (e) {
@@ -144,8 +149,8 @@ class Bitrix {
         }
 
         try {
-            let result = await this.sendAxios('telephony.externalcall.show', json)
-            logger.info(`Изменение ответственного по задаче ${util.inspect(result)}`);
+            let { result } = await this.sendAxios('telephony.externalcall.show', json)
+            logger.info(`Показ карточки позователям ${util.inspect(result)}`);
 
         } catch (e) {
             logger.error(e);
@@ -160,8 +165,8 @@ class Bitrix {
         }
 
         try {
-            let result = await this.sendAxios('telephony.externalcall.hide', json)
-            logger.info(`Изменение ответственного по задаче ${util.inspect(result)}`);
+            let { result } = await this.sendAxios('telephony.externalcall.hide', json)
+            logger.info(`Завершение показа карточки пользователям ${util.inspect(result)}`);
 
         } catch (e) {
             logger.error(e);
@@ -169,7 +174,44 @@ class Bitrix {
 
     };
 
+    async getUserIdDepartment(id) {
+        let json = {
+            "FILTER": {
+                "UF_DEPARTMENT": id,
+                "WORK_POSITION": this.departmentName
+            }
+        };
+        try {
+            let { result } = await this.sendAxios('user.get', json)
+            logger.info(`Результат запроса id ответственного по департаменту ${util.inspect(result)}`);
+            if (result.length != 0) {
+                return result[0].ID;
+            } else {
+                return '';
+            }
+        } catch (e) {
+            return e;
+        }
+    };
 
+    async getlUser(start = 0) {
+        let json = {
+            "FILTER": {
+                "ACTIVE": "true"
+            }
+        };
+        try {
+            let result = await this.sendAxios(`user.get?start=${start}`, json)
+                //logger.info(`Результат перебора пользователей ${util.inspect(result)}`);
+            if (result.length != 0) {
+                return result;
+            } else {
+                return '';
+            }
+        } catch (e) {
+            return e;
+        }
+    }
 
 };
 
