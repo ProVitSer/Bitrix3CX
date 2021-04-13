@@ -70,7 +70,7 @@ async function search3cxQueueCall(incomingNumber) {
         incomingNumber = incomingNumber.trim();
         let callInfo = await db.any(`SELECT to_dialednum FROM public.callcent_queuecalls where from_userpart like '%${incomingNumber}'  ORDER BY idcallcent_queuecalls DESC LIMIT 1;`);
         logger.info(`search3cxQueueCall ${util.inspect(callInfo)}`);
-        return callInfo;
+        return callInfo[0].to_dialednum;
     } catch (e) {
         return e;
     }

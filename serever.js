@@ -52,8 +52,8 @@ const sendAmiCall = (bitrixId, localExtension, outgoingNumber) => {
     action.priority = '1';
     action.timeout = '20000';
     action.context = 'RouteToLocalWebHookCall';
-    // action.exten = `${outgoingNumber.slice(1)}`;
-    action.exten = outgoingNumber;
+    action.exten = `${outgoingNumber.slice(1)}`;
+    //action.exten = outgoingNumber;
     action.variable = `var1=${outgoingNumber},var2=${localExtension},var3=${bitrixId}`;
     action.async = 'yes';
     logger.info(action);
@@ -68,18 +68,23 @@ app.use((req, res, next) => {
 });
 
 app.post('/originate*', async(req, res) => {
-    logger.info(req);
-    if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
-        res.status(200).end();
-        const resultSearchExtenByID = await db.getExtenByBitrixId(req.body.data.USER_ID);
-        //const bitrixUserID = req.body.data.USER_ID;
-        const outgoingNumber = req.body.data.PHONE_NUMBER;
-        const bitrixId = req.body.data.CALL_ID;
-        logger.info(bitrixUserID, outgoingNumber, bitrixId);
-        sendAmiCall(bitrixId, resultSearchExtenByID, outgoingNumber);
-    } else {
-        res.status(503).end();
+    try {
+        logger.info(req);
+        if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
+            res.status(200).end();
+            const resultSearchExtenByID = await db.getExtenByBitrixId(req.body.data.USER_ID);
+            //const bitrixUserID = req.body.data.USER_ID;
+            const outgoingNumber = req.body.data.PHONE_NUMBER;
+            const bitrixId = req.body.data.CALL_ID;
+            logger.info(bitrixId, outgoingNumber, bitrixId);
+            sendAmiCall(bitrixId, resultSearchExtenByID, outgoingNumber);
+        } else {
+            res.status(503).end();
+        }
+    } catch (e) {
+        logger.error(`Ошибка инициализации вызова из CRM  ${util.inspect(e)}`);
     }
+
 });
 
 /*
@@ -166,8 +171,6 @@ async function sendInfoByOutgoingCRMCall({
 /* Нужно сделать проверку с какого номера пришел вызов, чтобы подставить администратора по транку в BITRIXADMIN*/
 async function registerCallIdInBitrixAndShow({ unicueid, incomingNumber, callId }) {
     try {
-        // let incomingNumberMod = `+${incomingNumber}`;
-        //const incomingNumberMod = `${incomingNumber}`;
         const numberMod = await validateNumber(incomingNumber);
         let bitrixTrunkId = await db.getDepartmentIdByCallId(callId);
         const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, INCOMINGID, moment(new Date()).format('YYYY-MM-DD H:mm:ss'));
@@ -185,12 +188,10 @@ async function registerCallIdInBitrixAndShow({ unicueid, incomingNumber, callId 
 // Переделанная фукнция для входящего вызова. Отправка завершающей информации в Битрикс с ранее зарегистрированным вызовом
 async function sendInfoFinishCallToBitrix(bitrixUserID, incomingNumber, bitrixIDTypeCall, timeStartCall, billsec, isAnswered, recordingUrl, unicueid) {
     try {
-        // let incomingNumberMod = `+${incomingNumber}`;
-        //const incomingNumberMod = `${incomingNumber}`;
         const numberMod = await validateNumber(incomingNumber);
         const resultFinishCall = await bitrix.externalCallFinish(registerCallID[unicueid].registerBitrixCallID, bitrixUserID, billsec, isAnswered, bitrixIDTypeCall, recordingUrl);
         logger.info(`Получен результат завершения входящего вызова ${util.inspect(resultFinishCall)}`);
-        createTaskOnMissedCall(isAnswered, bitrixUserID, numberMod);
+        //createTaskOnMissedCall(isAnswered, bitrixUserID, numberMod);
     } catch (e) {
         logger.error(`Ошибка регистрации в Битрикс локального вызова  ${e}`);
     }
@@ -209,9 +210,8 @@ async function sendInfoByIncomingCall({
 }) {
     try {
         logger.info(trunkNumber, unicueid, incomingNumber, billsec, disposition, recording, start, end);
-        const lastCallUser, bitrixUserId;
-        // let incomingNumberMod = `+${incomingNumber}`;
-        //const incomingNumberMod = `${incomingNumber}`;
+        let lastCallUser = '';
+        let bitrixUserId = '';
         const numberMod = await validateNumber(incomingNumber);
         const bitrixTrunkId = await db.getDepartmentIdByCallId(trunkNumber);
         const callType = await db.getTypeCallProcessing(trunkNumber);
@@ -223,7 +223,7 @@ async function sendInfoByIncomingCall({
 
         if (callType == 'queue') {
             lastCallUser = await searchInDB.search3cxQueueCall(incomingNumber);
-            bitrixUserId = await db.getBitrixIdByExten(lastCallUser[0].dn);
+            bitrixUserId = await db.getBitrixIdByExten(lastCallUser);
         } else {
             lastCallUser = await searchInDB.searchLastUserRing(end3CXId[0].info_id);
             bitrixUserId = await db.getBitrixIdByExten(lastCallUser[0].dn);
@@ -249,7 +249,7 @@ nami.on('namiEventNewexten', (event) => {
     if (event.context == 'outbound-hangup-handler' &&
         event.application == 'NoOp'
     ) {
-        logger.info(`Завершился исходящие вызов на Asterisk ${event.appdata}`);
+        logger.info(`Завершился исходящие вызов на Asterisk ${util.inspect(event)}`);
         const phoneEvent = JSON.parse(event.appdata);
         sendInfoByOutgoingCall(phoneEvent);
     }
@@ -259,7 +259,7 @@ nami.on('namiEventNewexten', (event) => {
     if (event.context == 'incoming-hangup-handler' &&
         event.application == 'NoOp'
     ) {
-        logger.info(`Завершился входящий вызов на Asterisk ${event.appdata}`);
+        logger.info(`Завершился входящий вызов на Asterisk ${util.inspect(event)}`);
         const phoneEvent = JSON.parse(event.appdata);
         setTimeout(sendInfoByIncomingCall, 60000, phoneEvent);
     }
@@ -269,7 +269,7 @@ nami.on('namiEventNewexten', (event) => {
     if (event.context == 'outbound-call-hangup-handler' &&
         event.application == 'NoOp'
     ) {
-        logger.info(`Завершился исходящий вызов на Asterisk через CRM ${event.appdata}`);
+        logger.info(`Завершился исходящий вызов на Asterisk через CRM ${util.inspect(event)}`);
         const phoneEvent = JSON.parse(event.appdata);
         setTimeout(sendInfoByOutgoingCRMCall, 20000, phoneEvent);
     }
@@ -280,7 +280,7 @@ nami.on('namiEventNewexten', (event) => {
     if (event.context == 'operator-in' &&
         event.application == 'NoOp'
     ) {
-        logger.info(`Входящий звнок на Asterisk ${event.appdata}`);
+        logger.info(`Входящий звонок на Asterisk ${util.inspect(event)}`);
         const phoneEvent = JSON.parse(event.appdata);
         registerCallIdInBitrixAndShow(phoneEvent);
     }

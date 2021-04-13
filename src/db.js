@@ -109,7 +109,7 @@ const getDepartmentIdByCallId = (callId, type = 'department') => new Promise((re
         .find({ trunkNumber: callId })
         .value()
     if (!resultSearch) {
-        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка ${id} ${util.inspect(resultSearch)}`);
+        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка ${util.inspect(resultSearch)}`);
         reject('[DB] getDepartmentIdByCallId Error!', resultSearch)
     } else {
         resolve(resultSearch.id)
@@ -121,7 +121,7 @@ const getTypeCallProcessing = (callId, type = 'department') => new Promise((reso
         .find({ trunkNumber: callId })
         .value()
     if (!resultSearch) {
-        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка ${id} ${util.inspect(resultSearch)}`);
+        logger.error(`[DB] Error поиска  ответственного ID департамента по номеру транка  ${util.inspect(resultSearch)}`);
         reject('[DB] getDepartmentIdByCallId Error!', resultSearch)
     } else {
         resolve(resultSearch.callProcessing)
