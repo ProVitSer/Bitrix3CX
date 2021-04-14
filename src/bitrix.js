@@ -51,7 +51,7 @@ class Bitrix {
             "PHONE_NUMBER": params[1],
             "TYPE": params[2],
             "CALL_START_DATE": params[3],
-            "CRM_CREATE": true,
+            "CRM_CREATE": params[4],
             "SHOW": false
         };
         logger.info(json);
