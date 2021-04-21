@@ -128,6 +128,18 @@ const getTypeCallProcessing = (callId, type = 'department') => new Promise((reso
     }
 })
 
+const getShowUser = (callId, type = 'department') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
+        .find({ trunkNumber: callId })
+        .value()
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска пользователей которым надо показать карточку клиента  ${util.inspect(resultSearch)}`);
+        reject('[DB] getShowUser Error!', resultSearch)
+    } else {
+        resolve(resultSearch.showUsers)
+    }
+})
+
 module.exports = {
     insertInfoToDB,
     getAllInfoByType,
@@ -137,5 +149,6 @@ module.exports = {
     getBitrixIdByExten,
     getExtenByBitrixId,
     getDepartmentIdByCallId,
-    getTypeCallProcessing
+    getTypeCallProcessing,
+    getShowUser
 }
