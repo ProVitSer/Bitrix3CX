@@ -14,7 +14,7 @@ async function updateTrynkInform() {
         for (const key of resultSearchInDB) {
             let id = await bitrix.getUserIdDepartment(key.departmentId);
             let resultDelete = await db.deleteRule('department', key.departmentId);
-            let resultInsertInDb = await db.insertInfoToDB('department', { "trunkNumber": key.trunkNumber, "departmentId": key.departmentId, "id": id, "callProcessing": key.callProcessing });
+            let resultInsertInDb = await db.insertInfoToDB('department', { "trunkNumber": key.trunkNumber, "departmentId": key.departmentId, "id": id, "callProcessing": key.callProcessing, "showUsers": key.showUsers });
             logger.info(`Обновлям новые данные по привязки транка к ответственному по департаменту ${id}, ${resultDelete}, ${resultInsertInDb}`);
         }
         return true;
@@ -53,8 +53,6 @@ async function insertNewUserInDB(startPage) {
     try {
         await updateTrynkInform();
         await insertNewUserInDB(startPage);
-        //let a = await db.testAAA('users', '304');
-        //console.log(a.id)
     } catch (e) {
         logger.error(`Проблемы с запуском функции выгрузки ${e}`);
     }
