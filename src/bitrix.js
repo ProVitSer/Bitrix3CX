@@ -95,7 +95,7 @@ class Bitrix {
                 "PRIORITY": "2",
                 "DEADLINE": daedline
             }
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('tasks.task.add', json)
@@ -130,7 +130,7 @@ class Bitrix {
             "fields": {
                 "RESPONSIBLE_ID": "2255"
             }
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('tasks.task.update', json)
@@ -144,9 +144,9 @@ class Bitrix {
     async externalCallShow(...params) {
         let json = {
             "CALL_ID": params[0],
-            "USER_ID": ["2255", "2253", "2252", "2257", "2259", "2254", "2256", "2258", "2262"]
+            "USER_ID": params[1]
 
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('telephony.externalcall.show', json)
@@ -160,9 +160,8 @@ class Bitrix {
     async externalCallHide(...params) {
         let json = {
             "CALL_ID": params[0],
-            "USER_ID": ["2255", "2253", "2252", "2257", "2259", "2254", "2256", "2258", "2262"]
-
-        }
+            "USER_ID": params[1]
+        };
 
         try {
             let { result } = await this.sendAxios('telephony.externalcall.hide', json)
@@ -174,10 +173,6 @@ class Bitrix {
 
     };
 
-    async getActivity(id) {
-        let json = {
-            "ID": id
-        }
     async getUserIdDepartment(id) {
         let json = {
             "FILTER": {
@@ -185,6 +180,7 @@ class Bitrix {
                 "WORK_POSITION": this.departmentName
             }
         };
+
         try {
             let { result } = await this.sendAxios('user.get', json)
             logger.info(`Результат запроса id ответственного по департаменту ${util.inspect(result)}`);
@@ -198,19 +194,13 @@ class Bitrix {
         }
     };
 
-        try {
-            let result = await this.sendAxios('crm.activity.get', json)
-            logger.info(`Активность по вызову в таймлайне ${util.inspect(result)}`);
-            return result;
-        } catch (e) {
-            logger.error(e);
-        }
     async getlUser(start = 0) {
         let json = {
             "FILTER": {
                 "ACTIVE": "true"
             }
         };
+
         try {
             let result = await this.sendAxios(`user.get?start=${start}`, json)
                 //logger.info(`Результат перебора пользователей ${util.inspect(result)}`);
@@ -224,12 +214,24 @@ class Bitrix {
         }
     }
 
+    async getActivity(id) {
+        let json = {
+            "ID": id
+        };
+
+        try {
+            let { result } = await this.sendAxios('crm.activity.get', json)
+            logger.info(`Активность по вызову в таймлайне ${util.inspect(result)}`);
+            return result;
+        } catch (e) {
+            logger.error(e);
+        }
     };
 
     async deleteActivity(id) {
         let json = {
             "ID": id
-        }
+        };
 
         try {
             let result = await this.sendAxios('crm.activity.delete', json)
@@ -248,7 +250,7 @@ class Bitrix {
                 "SUBJECT": params[1],
                 "DESCRIPTION": params[2],
             }
-        }
+        };
 
         try {
             let result = await this.sendAxios('crm.activity.update', json)
