@@ -174,6 +174,10 @@ class Bitrix {
 
     };
 
+    async getActivity(id) {
+        let json = {
+            "ID": id
+        }
     async getUserIdDepartment(id) {
         let json = {
             "FILTER": {
@@ -194,6 +198,13 @@ class Bitrix {
         }
     };
 
+        try {
+            let result = await this.sendAxios('crm.activity.get', json)
+            logger.info(`Активность по вызову в таймлайне ${util.inspect(result)}`);
+            return result;
+        } catch (e) {
+            logger.error(e);
+        }
     async getlUser(start = 0) {
         let json = {
             "FILTER": {
@@ -212,6 +223,42 @@ class Bitrix {
             return e;
         }
     }
+
+    };
+
+    async deleteActivity(id) {
+        let json = {
+            "ID": id
+        }
+
+        try {
+            let result = await this.sendAxios('crm.activity.delete', json)
+            logger.info(`Результат удаление активности по вызову ${util.inspect(result)}`);
+            return result;
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async updateActivity(...params) {
+        let json = {
+            "ID": params[0],
+            "fields": {
+                "SUBJECT": params[1],
+                "DESCRIPTION": params[2],
+            }
+        }
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат обновление активности в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
 
 };
 
