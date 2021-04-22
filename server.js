@@ -55,11 +55,11 @@ const sendAmiCall = (bitrixId, localExtension, outgoingNumber) => {
 };
 
 app.use((req, res, next) => {
-    logger.info(`Получили запрос ${req.body}`);
+    logger.info(`Получили запрос ${util.inspect(req.body)}`);
     next();
 });
 
-app.post(`/${config.webhookUrl}*`, async(req, res) => {
+app.post(`/${config.url.webhookUrl}*`, async(req, res) => {
     try {
         if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
             res.status(200).end();
