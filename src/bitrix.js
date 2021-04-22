@@ -286,7 +286,7 @@ class Bitrix {
                 "OWNER_TYPE_ID": resultGetActivity.OWNER_TYPE_ID,
                 "OWNER_ID": resultGetActivity.OWNER_ID,
                 "TYPE_ID": resultGetActivity.TYPE_ID,
-                "STATUS": resultGetActivity.STATUS,
+                "STATUS": "1",
                 "RESPONSIBLE_ID": resultFinishCall.PORTAL_USER_ID,
                 "AUTHOR_ID": resultFinishCall.PORTAL_USER_ID,
                 "EDITOR_ID": resultFinishCall.PORTAL_USER_ID,
@@ -302,7 +302,7 @@ class Bitrix {
                 "PRIORITY": resultGetActivity.PRIORITY,
                 "DESCRIPTION": "Пропущенный звонок",
                 "DESCRIPTION_TYPE": resultGetActivity.DESCRIPTION_TYPE,
-                "START_TIME": START_TIME,
+                "START_TIME": resultGetActivity.START_TIME,
                 "END_TIME": resultGetActivity.END_TIME,
                 "DEADLINE": resultGetActivity.DEADLINE
             }

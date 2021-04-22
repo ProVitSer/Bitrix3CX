@@ -220,8 +220,6 @@ async function sendInfoByIncomingCall({
         logger.info(`Результат поиска последнего ответившего\не ответившего по входящему вызову ${lastCallUser} ${bitrixUserId}`);
         if (bitrixUserId != undefined) {
             if (isAnswered == '603') {
-
-
                 const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
                 await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
                 const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
@@ -232,7 +230,10 @@ async function sendInfoByIncomingCall({
             }
 
         } else {
-            await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+            const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+            await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
+            const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
+            await bitrix.createActivity(resultGetActivity, resultFinishCall);
         }
     } catch (e) {
         logger.error(`Ошибка по входящему вызову ${e}`);
