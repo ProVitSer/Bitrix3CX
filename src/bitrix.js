@@ -243,7 +243,7 @@ class Bitrix {
 
     };
 
-    async updateActivity(...params) {
+    async updateActivityCommentDescription(...params) {
         let json = {
             "ID": params[0],
             "fields": {
@@ -255,6 +255,62 @@ class Bitrix {
         try {
             let result = await this.sendAxios('crm.activity.update', json)
             logger.info(`Результат обновление активности в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async updateActivityReason(id) {
+        let json = {
+            "ID": id,
+            "fields": {
+                "CALL_FAILED_CODE": "304"
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат обновление статуса вызова в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async createActivity(resultGetActivity, resultFinishCall) {
+        let json = {
+            "fields": {
+                "OWNER_TYPE_ID": resultGetActivity.OWNER_TYPE_ID,
+                "OWNER_ID": resultGetActivity.OWNER_ID,
+                "TYPE_ID": resultGetActivity.TYPE_ID,
+                "STATUS": resultGetActivity.STATUS,
+                "RESPONSIBLE_ID": resultFinishCall.PORTAL_USER_ID,
+                "AUTHOR_ID": resultFinishCall.PORTAL_USER_ID,
+                "EDITOR_ID": resultFinishCall.PORTAL_USER_ID,
+                "DIRECTION": resultGetActivity.DIRECTION,
+                "TYPE": resultGetActivity.PROVIDER_TYPE_ID,
+                "COMMUNICATIONS": [{
+                    "VALUE": resultFinishCall.PHONE_NUMBER,
+                    "ENTITY_ID": resultFinishCall.CRM_ENTITY_ID,
+                    "ENTITY_TYPE_ID": resultFinishCall.CRM_ENTITY_TYPE
+                }],
+                "SUBJECT": `Входящий от ${resultFinishCall.PHONE_NUMBER}`,
+                "COMPLETED": "N",
+                "PRIORITY": resultGetActivity.PRIORITY,
+                "DESCRIPTION": "Пропущенный звонок",
+                "DESCRIPTION_TYPE": resultGetActivity.DESCRIPTION_TYPE,
+                "START_TIME": START_TIME,
+                "END_TIME": resultGetActivity.END_TIME,
+                "DEADLINE": resultGetActivity.DEADLINE
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.add', json)
+            logger.info(`Результат создание задачи на перезвон в таймлайне ${util.inspect(result)}`);
 
         } catch (e) {
             logger.error(e);
