@@ -262,6 +262,26 @@ class Bitrix {
 
     };
 
+    async updateActivityAuthorResponsibleUser(...params) {
+        let json = {
+            "ID": params[0],
+            "fields": {
+                "AUTHOR_ID": params[1],
+                "RESPONSIBLE_ID": params[2]
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат AUTHOR_ID RESPONSIBLE_ID по вызову из CRM  ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+
     async updateActivityReason(id) {
         let json = {
             "ID": id,

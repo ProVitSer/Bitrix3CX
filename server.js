@@ -112,6 +112,15 @@ async function sendInfoByOutgoingCall({
         logger.info(`Получен результат регистрации исходящего вызова ${util.inspect(resultRegisterCall)}`);
         const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall.CALL_ID, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
         logger.info(`Получен результат завершения исходящего вызова ${util.inspect(resultFinishCall)}`);
+        if (disposition == 'ANSWERED') {
+            const resultGetActivity = await bitrix.getActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
+            await bitrix.deleteActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
+            const numberMod = await validateNumber(exten);
+            const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserId, numberMod, config.bitrix.outgoing, start, config.bitrix.createOutgoingLead);
+            const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall.CALL_ID, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
+            await bitrix.updateActivityCommentDescription(resultFinishCall.CRM_ACTIVITY_ID, resultGetActivity.SUBJECT, resultFinishCallCRM.COMMENT);
+
+        }
         return '';
     } catch (e) {
         logger.error(`Ошибка по исходящему вызову ${e}`);
@@ -139,12 +148,8 @@ async function sendInfoByOutgoingCRMCall({
         //Удалем существующую задачу в таймлайне(так как она создается от администратора), регистрируем новый вызов и добавляем в таймлайн сохраненную информацию
         if (disposition == 'ANSWERED') {
             const resultGetActivity = await bitrix.getActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
-            await bitrix.deleteActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
-            const numberMod = await validateNumber(exten);
-            const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserId, numberMod, config.bitrix.outgoing, start, config.bitrix.createOutgoingLead);
-            const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall.CALL_ID, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
-            await bitrix.updateActivityCommentDescription(resultFinishCall.CRM_ACTIVITY_ID, resultGetActivity.SUBJECT, resultFinishCallCRM.COMMENT);
-
+            const rrrr = await bitrix.updateActivityAuthorResponsibleUser(resultFinishCallCRM.CRM_ACTIVITY_ID, bitrixUserId, bitrixUserId);
+            logger.info(`Получен ${util.inspect(rrrr)}`);
         }
         return '';
     } catch (e) {
