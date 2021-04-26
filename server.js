@@ -207,7 +207,7 @@ async function sendInfoByIncomingCall({
         const callId = await searchInDB.searchIncomingCallId(first3CXId[0].id);
         const end3CXId = await searchInDB.searchEndIncomingId(callId[0].call_id);
         const callInfo = await searchInDB.searchCallInfo(callId[0].call_id);
-        const isAnswered = callInfo[0].is_answered ? '200' : '603'; // Проверка отвечен вызов или нет
+        const isAnswered = callInfo[0].is_answered ? '200' : '304'; // Проверка отвечен вызов или нет
 
         if (callType == 'queue') {
             lastCallUser = await searchInDB.search3cxQueueCall(incomingNumber);
@@ -217,23 +217,16 @@ async function sendInfoByIncomingCall({
             bitrixUserId = await db.getBitrixIdByExten(lastCallUser[0].dn);
 
         }
-        logger.info(`Результат поиска последнего ответившего\не ответившего по входящему вызову ${lastCallUser} ${bitrixUserId}`);
-        if (bitrixUserId != undefined) {
-            if (isAnswered == '603') {
-                const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
-                await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
-                const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
-                await bitrix.createActivity(resultGetActivity, resultFinishCall);
 
+        if (bitrixUserId != undefined) {
+            if (isAnswered == '304') {
+                sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
             } else {
-                await sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+                sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
             }
 
         } else {
-            const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
-            await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
-            const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
-            await bitrix.createActivity(resultGetActivity, resultFinishCall);
+            sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
         }
     } catch (e) {
         logger.error(`Ошибка по входящему вызову ${e}`);
