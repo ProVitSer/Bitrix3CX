@@ -31,16 +31,16 @@ const insertInfoToDB = (type = 'department', data) => new Promise((resolve, reje
 
 })
 
-const deleteRule = (type = 'department', departmentId) => new Promise((resolve, reject) => {
+const deleteRule = (type = 'department', trunkNumber) => new Promise((resolve, reject) => {
     const deleteRecords = db
         .get(type)
-        .remove({ departmentId })
+        .remove({ trunkNumber })
         .write();
     if (!deleteRecords) {
         logger.error(`[DB] Delete Error! ${util.inspect(deleteRecords)}`);
         reject('[DB] Delete Error!', deleteRecords);
     } else {
-        logger.info(`[DB] Удаление:  ${util.inspect(departmentId)}`);
+        logger.info(`[DB] Удаление:  ${util.inspect(trunkNumber)}`);
         resolve(deleteRecords)
     }
 })

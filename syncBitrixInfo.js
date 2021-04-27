@@ -13,7 +13,7 @@ async function updateTrynkInform() {
         let resultSearchInDB = await db.getAllInfoByType('department');
         for (const key of resultSearchInDB) {
             let id = await bitrix.getUserIdDepartment(key.departmentId);
-            let resultDelete = await db.deleteRule('department', key.departmentId);
+            let resultDelete = await db.deleteRule('department', key.trunkNumber);
             let resultInsertInDb = await db.insertInfoToDB('department', { "trunkNumber": key.trunkNumber, "departmentId": key.departmentId, "id": id, "callProcessing": key.callProcessing, "showUsers": key.showUsers });
             logger.info(`Обновлям новые данные по привязки транка к ответственному по департаменту ${id}, ${resultDelete}, ${resultInsertInDb}`);
         }
