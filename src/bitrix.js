@@ -43,7 +43,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async externalCallRegister(...params) {
         let json = {
@@ -62,7 +62,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async externalCallFinish(...params) {
         let json = {
@@ -82,7 +82,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async createTask(...params) {
         let daedline = moment(new Date).add(2, 'minutes').format('YYYY-MM-DD H:mm:ss');
@@ -104,7 +104,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async taskStatus(...params) {
         let json = {
@@ -122,7 +122,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async updateTaskResponsibleId(...params) {
         let json = {
@@ -139,7 +139,7 @@ class Bitrix {
         } catch (e) {
             logger.error(e);
         }
-    };
+    }
 
     async externalCallShow(...params) {
         let json = {
@@ -155,7 +155,7 @@ class Bitrix {
         } catch (e) {
             logger.error(e);
         }
-    };
+    }
 
     async externalCallHide(...params) {
         let json = {
@@ -171,7 +171,7 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
     async getUserIdDepartment(id) {
         let json = {
@@ -192,7 +192,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async getlUser(start = 0) {
         let json = {
@@ -203,7 +203,6 @@ class Bitrix {
 
         try {
             let result = await this.sendAxios(`user.get?start=${start}`, json)
-                //logger.info(`Результат перебора пользователей ${util.inspect(result)}`);
             if (result.length != 0) {
                 return result;
             } else {
@@ -226,7 +225,7 @@ class Bitrix {
         } catch (e) {
             logger.error(e);
         }
-    };
+    }
 
     async deleteActivity(id) {
         let json = {
@@ -241,7 +240,7 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
     async updateActivityCommentDescription(...params) {
         let json = {
@@ -260,7 +259,7 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
     async updateActivityAuthorResponsibleUser(...params) {
         let json = {
@@ -279,7 +278,7 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
     async updateActivityReason(id) {
         let json = {
@@ -297,7 +296,7 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
     async createActivity(resultGetActivity, resultFinishCall) {
         let json = {
@@ -335,8 +334,8 @@ class Bitrix {
             logger.error(e);
         }
 
-    };
+    }
 
-};
+}
 
 module.exports = Bitrix;

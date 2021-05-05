@@ -13,7 +13,7 @@ async function searchFirstIncomingId(incomingNumber) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function searchIncomingCallId(first3CXId) {
     try {
@@ -23,7 +23,7 @@ async function searchIncomingCallId(first3CXId) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function searchIncomingInfoByLocalCall(end3CXId) {
     try {
@@ -33,7 +33,7 @@ async function searchIncomingInfoByLocalCall(end3CXId) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function searchEndIncomingId(callId) {
     try {
@@ -43,7 +43,7 @@ async function searchEndIncomingId(callId) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function searchCallInfo(callId) {
     try {
@@ -53,7 +53,7 @@ async function searchCallInfo(callId) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function searchLastUserRing(end3CXId) {
     try {
@@ -63,7 +63,7 @@ async function searchLastUserRing(end3CXId) {
     } catch (e) {
         return e;
     }
-};
+}
 
 async function search3cxQueueCall(incomingNumber) {
     try {
@@ -74,7 +74,7 @@ async function search3cxQueueCall(incomingNumber) {
     } catch (e) {
         return e;
     }
-};
+}
 
 
 module.exports = { searchFirstIncomingId, searchIncomingCallId, searchEndIncomingId, searchCallInfo, searchLastUserRing, searchIncomingInfoByLocalCall, search3cxQueueCall };

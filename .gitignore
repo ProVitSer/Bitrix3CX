@@ -4,3 +4,5 @@ info*
 logs*
 test*
 db.json
+.
+test.js

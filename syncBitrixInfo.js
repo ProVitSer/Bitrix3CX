@@ -5,7 +5,7 @@ const Bitrix = require('./src/bitrix'),
 
 const bitrix = new Bitrix();
 //Страница с которой начинается выгрузка пользователей из Битрикс. Ограничение Битрикса выгрузка по 50 пользователей за раз
-let startPage = 0;
+let bitrixStartPage = 0;
 
 //В БД заполняет параметры ID департамента и привязанный к нему транк. Производиться перебор всех id, запрос в Битрикс на ответственного по нему и заново формируется БД с привязкой
 async function updateTrynkInform() {
@@ -47,12 +47,12 @@ async function insertNewUserInDB(startPage) {
     } catch (e) {
         logger.error(`Проблемы с выгрузкой пользователей из Битрикс ${e}`);
     }
-};
+}
 
 (async function() {
     try {
         await updateTrynkInform();
-        await insertNewUserInDB(startPage);
+        await insertNewUserInDB(bitrixStartPage);
     } catch (e) {
         logger.error(`Проблемы с запуском функции выгрузки ${e}`);
     }

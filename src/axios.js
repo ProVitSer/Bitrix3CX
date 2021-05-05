@@ -47,7 +47,7 @@ class Bitrix {
         } catch (e) {
             return e;
         }
-    };
+    }
 
     async getlUser(start = 0) {
         let json = {
@@ -68,6 +68,6 @@ class Bitrix {
     }
 
 
-};
+}
 
 module.exports = Bitrix;

@@ -12,7 +12,7 @@ db.defaults({ department: [], users: [] })
     .write();
 
 
-const insertInfoToDB = (type = 'department', data) => new Promise((resolve, reject) => {
+const insertInfoToDB = (data, type = 'department') => new Promise((resolve, reject) => {
     try {
         console.log(`Добавляем в базу ${type}, ${util.inspect(data)}`);
         const insertInDB = db.get(type)
@@ -31,7 +31,7 @@ const insertInfoToDB = (type = 'department', data) => new Promise((resolve, reje
 
 })
 
-const deleteRule = (type = 'department', trunkNumber) => new Promise((resolve, reject) => {
+const deleteRule = (trunkNumber, type = 'department') => new Promise((resolve, reject) => {
     const deleteRecords = db
         .get(type)
         .remove({ trunkNumber })

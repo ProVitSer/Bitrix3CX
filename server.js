@@ -24,13 +24,10 @@ const validateNumber = (number) => {
     switch (number.length) {
         case 10:
             return `+7${number}`;
-            break;
         case 11:
             return `+7${number.slice(1,11)}`
-            break;
         default:
             return number;
-            break;
     }
 
 };
@@ -63,7 +60,6 @@ app.post(`/${config.url.webhookUrl}*`, async(req, res) => {
         if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
             res.status(200).end();
             const resultSearchExtenByID = await db.getExtenByBitrixId(req.body.data.USER_ID);
-            //const bitrixUserID = req.body.data.USER_ID;
             const outgoingNumber = req.body.data.PHONE_NUMBER;
             const bitrixId = req.body.data.CALL_ID;
             logger.info(bitrixId, outgoingNumber, bitrixId);
@@ -137,9 +133,9 @@ async function sendInfoByOutgoingCRMCall({
 
         //Удалем существующую задачу в таймлайне(так как она создается от администратора), регистрируем новый вызов и добавляем в таймлайн сохраненную информацию
         if (disposition == 'ANSWERED') {
-            const resultGetActivity = await bitrix.getActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
-            const rrrr = await bitrix.updateActivityAuthorResponsibleUser(resultFinishCallCRM.CRM_ACTIVITY_ID, bitrixUserId, bitrixUserId);
-            logger.info(`Получен ${util.inspect(rrrr)}`);
+            await bitrix.getActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
+            const resultUpdateActiviti = await bitrix.updateActivityAuthorResponsibleUser(resultFinishCallCRM.CRM_ACTIVITY_ID, bitrixUserId, bitrixUserId);
+            logger.info(`Получен ${util.inspect(resultUpdateActiviti)}`);
         }
         return '';
     } catch (e) {
