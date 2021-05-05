@@ -4,7 +4,7 @@ const db = require('../models/db'),
     util = require('util');
 
 
-
+//Поиск ID первого вхождения вызова по внешнему номеру 
 async function searchFirstIncomingId(incomingNumber) {
     try {
         let first3CXId = await db.any(`SELECT id FROM cl_party_info WHERE caller_number like '${incomingNumber}' ORDER BY id DESC LIMIT 1`);
@@ -15,6 +15,7 @@ async function searchFirstIncomingId(incomingNumber) {
     }
 }
 
+//Поиск уникального CallID вызова по ID первому вхождению
 async function searchIncomingCallId(first3CXId) {
     try {
         let callInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${first3CXId}`);
@@ -25,6 +26,7 @@ async function searchIncomingCallId(first3CXId) {
     }
 }
 
+//Поиск итоговой информации по вызову 
 async function searchIncomingInfoByLocalCall(end3CXId) {
     try {
         let incomingInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${end3CXId}`);
@@ -35,6 +37,7 @@ async function searchIncomingInfoByLocalCall(end3CXId) {
     }
 }
 
+//Поиск промежуточного ID по вызову
 async function searchEndIncomingId(callId) {
     try {
         let end3CXId = await db.any(`SELECT info_id FROM cl_participants WHERE call_id = ${callId} ORDER BY info_id DESC LIMIT 1`);
@@ -45,6 +48,7 @@ async function searchEndIncomingId(callId) {
     }
 }
 
+//Поиск итоговой информации по вызову 
 async function searchCallInfo(callId) {
     try {
         let callInfo = await db.any(`SELECT start_time, talking_dur, is_answered FROM public.cl_calls where id = ${callId}`);
@@ -55,6 +59,7 @@ async function searchCallInfo(callId) {
     }
 }
 
+//Поиск последнего ответившего\не по вызову при групповом вызове
 async function searchLastUserRing(end3CXId) {
     try {
         let lastCallUser = await db.any(`SELECT dn FROM cl_party_info WHERE id = ${end3CXId}`);
@@ -65,6 +70,7 @@ async function searchLastUserRing(end3CXId) {
     }
 }
 
+//Поиск последнего ответившего\не по вызову при вызове через очередь
 async function search3cxQueueCall(incomingNumber) {
     try {
         incomingNumber = incomingNumber.trim();

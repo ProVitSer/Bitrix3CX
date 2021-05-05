@@ -4,7 +4,7 @@ const axios = require('axios'),
 
 
 class Bitrix {
-    constructor(domain = 'portal5.lazurit.ml', hash = '0t7ph60voejmszuv') {
+    constructor(domain = 'bitrix.porta.ru', hash = 'asfasdfljh332') {
         this.domain = domain;
         this.hash = hash;
         this.config = {

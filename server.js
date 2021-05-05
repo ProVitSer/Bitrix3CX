@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const bitrix = new Bitrix();
 const registerCallID = [];
 
-
+//Преобразование номер в формат +7
 const validateNumber = (number) => {
     switch (number.length) {
         case 10:
@@ -32,17 +32,17 @@ const validateNumber = (number) => {
 
 };
 
-
+//инициализация вызова через AMI Asterisk { Битрикс ID из webhook, Внутренний номер 3сх, внешний номер}
 const sendAmiCall = (bitrixId, localExtension, outgoingNumber) => {
     logger.info(bitrixId, localExtension, outgoingNumber);
     const action = new namiLib.Actions.Originate();
-    action.channel = `local/${localExtension}:${outgoingNumber}@${config.context.bridge3CX}`;
+    action.channel = `local/${localExtension}:${outgoingNumber}@${config.context.bridge3CX}`; //Маршрутизация через локальные каналы. Далее идет обрезка внешнего и внутреннего номера
     action.callerid = outgoingNumber;
     action.priority = '1';
     action.timeout = '20000';
-    action.context = config.context.crmCall;
+    action.context = config.context.crmCall; //Контекст исходящего вызова из CRM
     action.exten = `${outgoingNumber.slice(1)}`;
-    action.variable = `var1=${outgoingNumber},var2=${localExtension},var3=${bitrixId}`;
+    action.variable = `var1=${outgoingNumber},var2=${localExtension},var3=${bitrixId}`; //Передача переменных, чтобы отловить их по Evenet
     action.async = 'yes';
     logger.info(action);
     nami.send(action, (response) => {
@@ -55,6 +55,7 @@ app.use((req, res, next) => {
     next();
 });
 
+//Обработка входящих webhook от Битрикс для оригинации вызова через AMI Asterisk
 app.post(`/${config.url.webhookUrl}*`, async(req, res) => {
     try {
         if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
@@ -73,7 +74,7 @@ app.post(`/${config.url.webhookUrl}*`, async(req, res) => {
 
 });
 
-
+//Создание задачи для пользователя по пропущенному вызову в делах
 async function createTaskOnMissedCall(isAnswered, bitrixUserId, incomingNumber) {
     try {
         if (isAnswered == '304') {
@@ -88,6 +89,7 @@ async function createTaskOnMissedCall(isAnswered, bitrixUserId, incomingNumber) 
     }
 }
 
+//Отправка в CRM информации по исходящему по стандартному маршруту
 async function sendInfoByOutgoingCall({
     exten,
     unicueid,
@@ -113,6 +115,7 @@ async function sendInfoByOutgoingCall({
     }
 }
 
+//Отправка в CRM информации по исходящему вызову через webhook Битрикс
 async function sendInfoByOutgoingCRMCall({
     exten,
     unicueid,
@@ -127,7 +130,7 @@ async function sendInfoByOutgoingCRMCall({
     try {
         logger.info(`sendInfoByOutgoingCRMCall ${exten}, ${unicueid}, ${extensionNumber}, ${bitrixCallId}, ${billsec}, ${disposition}, ${recording}, ${start},${end}`);
         //Поиск в БД информации сопоставления добавочного номера и ID Битрикс
-        const bitrixUserId = await db.getBitrixIdByExten(extensionNumber);
+        const bitrixUserId = await db.getBitrixIdByExten(extensionNumber); //Поиск Битрикс ID пользователя по его добавочному номеру
         const resultFinishCallCRM = await bitrix.externalCallFinish(bitrixCallId, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
         logger.info(`Получен результат завершения вызова через CRM ${util.inspect(resultFinishCallCRM)}`);
 
@@ -146,14 +149,14 @@ async function sendInfoByOutgoingCRMCall({
 // Регистрация вызова для входящего вызова с сохранение информации по CALLID Битрикс
 async function registerCallIdInBitrixAndShow({ unicueid, incomingNumber, callId }) {
     try {
-        const numberMod = await validateNumber(incomingNumber);
-        const bitrixTrunkId = await db.getDepartmentIdByCallId(callId);
-        const usersArray = await db.getShowUser(callId);
-        const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, config.bitrix.incoming, moment(new Date()).format('YYYY-MM-DD H:mm:ss'), config.bitrix.createIncomingLead);
+        const numberMod = await validateNumber(incomingNumber); //Преобразование внешнего номера под нужный стандарт E164
+        const bitrixTrunkId = await db.getDepartmentIdByCallId(callId); //Поиск ответственного по внешнему номеру. Возвращает ID пользователя Битрикс
+        const usersArray = await db.getShowUser(callId); //Поиск пользователей по внешнему номеру, которым надо поднимать карточку в CRM
+        const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, config.bitrix.incoming, moment(new Date()).format('YYYY-MM-DD H:mm:ss'), config.bitrix.createIncomingLead); //Регистрация вызова в Битрикс
         logger.info(`Получен результат регистрации входящего вызова ${util.inspect(resultRegisterCall)}`);
-        const resultShow = await bitrix.externalCallShow(resultRegisterCall.CALL_ID, usersArray);
+        const resultShow = await bitrix.externalCallShow(resultRegisterCall.CALL_ID, usersArray); //Всплывающая карточка для массива пользователей
         logger.info(`Получен результат поднятия карточки ${util.inspect(resultShow)}`);
-        setTimeout(bitrix.externalCallHide.bind(bitrix), config.bitrix.timeoutShow, resultRegisterCall.CALL_ID, usersArray);
+        setTimeout(bitrix.externalCallHide.bind(bitrix), config.bitrix.timeoutShow, resultRegisterCall.CALL_ID, usersArray); //Убрать показ карточки у массива пользователей по таймауту
         registerCallID[unicueid] = { registerBitrixCallID: resultRegisterCall.CALL_ID };
         logger.info(`Сопоставление вызовов ${registerCallID}`);
     } catch (e) {
@@ -176,7 +179,7 @@ async function sendInfoFinishCallToBitrix(bitrixUserID, incomingNumber, bitrixID
     }
 }
 
-// Изменение в передачи данных
+//Отправка в CRM информации по входящему вызову
 async function sendInfoByIncomingCall({
     trunkNumber,
     unicueid,
@@ -191,33 +194,33 @@ async function sendInfoByIncomingCall({
         logger.info(trunkNumber, unicueid, incomingNumber, billsec, disposition, recording, start, end);
         let lastCallUser = '';
         let bitrixUserId = '';
-        const numberMod = await validateNumber(incomingNumber);
-        const bitrixTrunkId = await db.getDepartmentIdByCallId(trunkNumber);
-        const callType = await db.getTypeCallProcessing(trunkNumber);
-        const first3CXId = await searchInDB.searchFirstIncomingId(incomingNumber);
-        const callId = await searchInDB.searchIncomingCallId(first3CXId[0].id);
-        const end3CXId = await searchInDB.searchEndIncomingId(callId[0].call_id);
-        const callInfo = await searchInDB.searchCallInfo(callId[0].call_id);
-        const isAnswered = callInfo[0].is_answered ? '200' : '603'; // Проверка отвечен вызов или нет
+        const numberMod = await validateNumber(incomingNumber); //Преобразование внешнего номера под нужный стандарт E164
+        const bitrixTrunkId = await db.getDepartmentIdByCallId(trunkNumber); //Поиск ответственного по внешнему номеру. Возвращает ID пользователя Битрикс
+        const callType = await db.getTypeCallProcessing(trunkNumber); //Выгрузка логики обработки на стороне 3сх по внешнему номеру (очередь\queue или группа\group)
+        const first3CXId = await searchInDB.searchFirstIncomingId(incomingNumber); //Поиск в БД 3сх ID первого вхождения по внешнему номеру
+        const callId = await searchInDB.searchIncomingCallId(first3CXId[0].id); //Поиск в БД 3сх ID уникальный CallID вызова по ID первого вхождения
+        const end3CXId = await searchInDB.searchEndIncomingId(callId[0].call_id); //Поиск в БД 3сх последнего вхождения (последнего события по вызову)
+        const callInfo = await searchInDB.searchCallInfo(callId[0].call_id); //Поиск в БД 3сх статус вызова 
+        const isAnswered = callInfo[0].is_answered ? '200' : '603'; //Проверка и преобразваоние статуса вызова из 3сх (true\200 false\603)
 
         if (callType == 'queue') {
-            lastCallUser = await searchInDB.search3cxQueueCall(incomingNumber);
-            bitrixUserId = await db.getBitrixIdByExten(lastCallUser);
+            lastCallUser = await searchInDB.search3cxQueueCall(incomingNumber); //Поиск в БД 3сх таблицы очереди кто последний ответили или нет на вызов
+            bitrixUserId = await db.getBitrixIdByExten(lastCallUser); //Поиск Битрикс ID пользователя по его добавочному номеру
         } else {
-            lastCallUser = await searchInDB.searchLastUserRing(end3CXId[0].info_id);
-            bitrixUserId = await db.getBitrixIdByExten(lastCallUser[0].dn);
+            lastCallUser = await searchInDB.searchLastUserRing(end3CXId[0].info_id); //Поиск в БД 3сх таблицы группы кто последний ответили или нет на вызов
+            bitrixUserId = await db.getBitrixIdByExten(lastCallUser[0].dn); //Поиск Битрикс ID пользователя по его добавочному номеру
 
         }
         logger.info(`Результат поиска последнего ответившего\не ответившего по входящему вызову ${lastCallUser} ${bitrixUserId}`);
         if (bitrixUserId != undefined) {
             if (isAnswered == '603') {
                 const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
-                await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
-                const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
-                await bitrix.createActivity(resultGetActivity, resultFinishCall);
+                await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID); //Обновляем статус вызова на 304 в таймлайне, чтобы в таймлайне появилось событие вызова без создание задачи на пропущенный вызов
+                const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID); //Получаем информацию по ранее созданному вызову в Битрикс 
+                await bitrix.createActivity(resultGetActivity, resultFinishCall); //Создаем задачу пропущенный вызов
 
             } else {
-                await sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+                await sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid); //Если не 603, просто завершаем вызов без изменений в таймлайне
             }
 
         } else {
@@ -231,6 +234,7 @@ async function sendInfoByIncomingCall({
     }
 }
 
+//Event завершения исходящего вызова по стандартным маршрутам
 nami.on('namiEventNewexten', (event) => {
     if (event.context == config.context.handlerOutgoingCall &&
         event.application == 'NoOp'
@@ -241,6 +245,7 @@ nami.on('namiEventNewexten', (event) => {
     }
 });
 
+//Event завершения входящего вызова по стандартным маршрутам
 nami.on('namiEventNewexten', (event) => {
     if (event.context == config.context.handlerIncomingCall &&
         event.application == 'NoOp'
@@ -251,6 +256,7 @@ nami.on('namiEventNewexten', (event) => {
     }
 });
 
+//Event по завершению исходящего вызова инициированный через webhook CRM
 nami.on('namiEventNewexten', (event) => {
     if (event.context == config.context.handlerCrmCall &&
         event.application == 'NoOp'
@@ -261,7 +267,7 @@ nami.on('namiEventNewexten', (event) => {
     }
 });
 
-// Новый евент с информацие по уникальному ID и номеру, для регистрации вызова и поднятие карточки
+// Новый Event с информацие по уникальному ID и номеру, для регистрации вызова и поднятие карточки
 nami.on('namiEventNewexten', (event) => {
     if (event.context == config.context.incomingCall &&
         event.application == 'NoOp'
