@@ -54,7 +54,7 @@ const sendAmiCall = (bitrixId, localExtension, outgoingNumber) => {
 };
 
 app.use((req, res, next) => {
-    logger.info(`Получили запрос ${req.body}`);
+    logger.info(`Получили запрос ${util.inspect(req.body)}`);
     next();
 });
 
@@ -109,7 +109,7 @@ async function sendInfoByOutgoingCall({
         const numberMod = await validateNumber(exten);
         const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserId, numberMod, config.bitrix.outgoing, start, config.bitrix.createOutgoingLead);
         logger.info(`Получен результат регистрации исходящего вызова ${util.inspect(resultRegisterCall)}`);
-        const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
+        const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall.CALL_ID, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
         logger.info(`Получен результат завершения исходящего вызова ${util.inspect(resultFinishCall)}`);
         return '';
     } catch (e) {
@@ -132,8 +132,15 @@ async function sendInfoByOutgoingCRMCall({
         logger.info(`sendInfoByOutgoingCRMCall ${exten}, ${unicueid}, ${extensionNumber}, ${bitrixCallId}, ${billsec}, ${disposition}, ${recording}, ${start},${end}`);
         //Поиск в БД информации сопоставления добавочного номера и ID Битрикс
         const bitrixUserId = await db.getBitrixIdByExten(extensionNumber);
-        const resultFinishCall = await bitrix.externalCallFinish(bitrixCallId, bitrixUserId, billsec, status[disposition], config.bitrix.outgoing, recording);
-        logger.info(`Получен результат завершения входящего вызова ${util.inspect(resultFinishCall)}`);
+        const resultFinishCallCRM = await bitrix.externalCallFinish(bitrixCallId, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
+        logger.info(`Получен результат завершения вызова через CRM ${util.inspect(resultFinishCallCRM)}`);
+
+        //Удалем существующую задачу в таймлайне(так как она создается от администратора), регистрируем новый вызов и добавляем в таймлайн сохраненную информацию
+        if (disposition == 'ANSWERED') {
+            const resultGetActivity = await bitrix.getActivity(resultFinishCallCRM.CRM_ACTIVITY_ID);
+            const rrrr = await bitrix.updateActivityAuthorResponsibleUser(resultFinishCallCRM.CRM_ACTIVITY_ID, bitrixUserId, bitrixUserId);
+            logger.info(`Получен ${util.inspect(rrrr)}`);
+        }
         return '';
     } catch (e) {
         logger.error(`Ошибка по исходящему вызову через CRM ${e}`);
@@ -144,12 +151,13 @@ async function sendInfoByOutgoingCRMCall({
 async function registerCallIdInBitrixAndShow({ unicueid, incomingNumber, callId }) {
     try {
         const numberMod = await validateNumber(incomingNumber);
-        let bitrixTrunkId = await db.getDepartmentIdByCallId(callId);
+        const bitrixTrunkId = await db.getDepartmentIdByCallId(callId);
+        const usersArray = await db.getShowUser(callId);
         const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, config.bitrix.incoming, moment(new Date()).format('YYYY-MM-DD H:mm:ss'), config.bitrix.createIncomingLead);
         logger.info(`Получен результат регистрации входящего вызова ${util.inspect(resultRegisterCall)}`);
-        const resultShow = await bitrix.externalCallShow(resultRegisterCall.CALL_ID);
+        const resultShow = await bitrix.externalCallShow(resultRegisterCall.CALL_ID, usersArray);
         logger.info(`Получен результат поднятия карточки ${util.inspect(resultShow)}`);
-        setTimeout(bitrix.externalCallHide.bind(bitrix), config.bitrix.timeoutShow, resultRegisterCall.CALL_ID);
+        setTimeout(bitrix.externalCallHide.bind(bitrix), config.bitrix.timeoutShow, resultRegisterCall.CALL_ID, usersArray);
         registerCallID[unicueid] = { registerBitrixCallID: resultRegisterCall.CALL_ID };
         logger.info(`Сопоставление вызовов ${registerCallID}`);
     } catch (e) {
@@ -166,6 +174,7 @@ async function sendInfoFinishCallToBitrix(bitrixUserID, incomingNumber, bitrixID
         if (config.bitrix.createTask == 'true') {
             createTaskOnMissedCall(isAnswered, bitrixUserID, numberMod);
         }
+        return resultFinishCall;
     } catch (e) {
         logger.error(`Ошибка регистрации в Битрикс локального вызова  ${e}`);
     }
@@ -193,7 +202,7 @@ async function sendInfoByIncomingCall({
         const callId = await searchInDB.searchIncomingCallId(first3CXId[0].id);
         const end3CXId = await searchInDB.searchEndIncomingId(callId[0].call_id);
         const callInfo = await searchInDB.searchCallInfo(callId[0].call_id);
-        const isAnswered = callInfo[0].is_answered ? '200' : '304'; // Проверка отвечен вызов или нет
+        const isAnswered = callInfo[0].is_answered ? '200' : '603'; // Проверка отвечен вызов или нет
 
         if (callType == 'queue') {
             lastCallUser = await searchInDB.search3cxQueueCall(incomingNumber);
@@ -205,14 +214,21 @@ async function sendInfoByIncomingCall({
         }
         logger.info(`Результат поиска последнего ответившего\не ответившего по входящему вызову ${lastCallUser} ${bitrixUserId}`);
         if (bitrixUserId != undefined) {
-            if (isAnswered == '304') {
-                sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+            if (isAnswered == '603') {
+                const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+                await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
+                const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
+                await bitrix.createActivity(resultGetActivity, resultFinishCall);
+
             } else {
-                sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+                await sendInfoFinishCallToBitrix(bitrixUserId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
             }
 
         } else {
-            sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+            const resultFinishCall = await sendInfoFinishCallToBitrix(bitrixTrunkId, numberMod, config.bitrix.incoming, start, billsec, isAnswered, recording, unicueid);
+            await bitrix.updateActivityReason(resultFinishCall.CRM_ACTIVITY_ID);
+            const resultGetActivity = await bitrix.getActivity(resultFinishCall.CRM_ACTIVITY_ID);
+            await bitrix.createActivity(resultGetActivity, resultFinishCall);
         }
     } catch (e) {
         logger.error(`Ошибка по входящему вызову ${e}`);

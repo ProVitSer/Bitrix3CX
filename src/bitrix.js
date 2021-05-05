@@ -95,7 +95,7 @@ class Bitrix {
                 "PRIORITY": "2",
                 "DEADLINE": daedline
             }
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('tasks.task.add', json)
@@ -130,7 +130,7 @@ class Bitrix {
             "fields": {
                 "RESPONSIBLE_ID": "2255"
             }
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('tasks.task.update', json)
@@ -144,9 +144,9 @@ class Bitrix {
     async externalCallShow(...params) {
         let json = {
             "CALL_ID": params[0],
-            "USER_ID": ["2255", "2253", "2252", "2257", "2259", "2254", "2256", "2258", "2262"]
+            "USER_ID": params[1]
 
-        }
+        };
 
         try {
             let { result } = await this.sendAxios('telephony.externalcall.show', json)
@@ -160,9 +160,8 @@ class Bitrix {
     async externalCallHide(...params) {
         let json = {
             "CALL_ID": params[0],
-            "USER_ID": ["2255", "2253", "2252", "2257", "2259", "2254", "2256", "2258", "2262"]
-
-        }
+            "USER_ID": params[1]
+        };
 
         try {
             let { result } = await this.sendAxios('telephony.externalcall.hide', json)
@@ -181,6 +180,7 @@ class Bitrix {
                 "WORK_POSITION": this.departmentName
             }
         };
+
         try {
             let { result } = await this.sendAxios('user.get', json)
             logger.info(`Результат запроса id ответственного по департаменту ${util.inspect(result)}`);
@@ -200,6 +200,7 @@ class Bitrix {
                 "ACTIVE": "true"
             }
         };
+
         try {
             let result = await this.sendAxios(`user.get?start=${start}`, json)
                 //logger.info(`Результат перебора пользователей ${util.inspect(result)}`);
@@ -212,6 +213,129 @@ class Bitrix {
             return e;
         }
     }
+
+    async getActivity(id) {
+        let json = {
+            "ID": id
+        };
+
+        try {
+            let { result } = await this.sendAxios('crm.activity.get', json)
+            logger.info(`Активность по вызову в таймлайне ${util.inspect(result)}`);
+            return result;
+        } catch (e) {
+            logger.error(e);
+        }
+    };
+
+    async deleteActivity(id) {
+        let json = {
+            "ID": id
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.delete', json)
+            logger.info(`Результат удаление активности по вызову ${util.inspect(result)}`);
+            return result;
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async updateActivityCommentDescription(...params) {
+        let json = {
+            "ID": params[0],
+            "fields": {
+                "SUBJECT": params[1],
+                "DESCRIPTION": params[2],
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат обновление активности в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async updateActivityAuthorResponsibleUser(...params) {
+        let json = {
+            "ID": params[0],
+            "fields": {
+                "AUTHOR_ID": params[1],
+                "RESPONSIBLE_ID": params[2]
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат AUTHOR_ID RESPONSIBLE_ID по вызову из CRM  ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async updateActivityReason(id) {
+        let json = {
+            "ID": id,
+            "fields": {
+                "CALL_FAILED_CODE": "304"
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.update', json)
+            logger.info(`Результат обновление статуса вызова в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
+
+    async createActivity(resultGetActivity, resultFinishCall) {
+        let json = {
+            "fields": {
+                "OWNER_TYPE_ID": resultGetActivity.OWNER_TYPE_ID,
+                "OWNER_ID": resultGetActivity.OWNER_ID,
+                "TYPE_ID": resultGetActivity.TYPE_ID,
+                "STATUS": "1",
+                "RESPONSIBLE_ID": resultFinishCall.PORTAL_USER_ID,
+                "AUTHOR_ID": resultFinishCall.PORTAL_USER_ID,
+                "EDITOR_ID": resultFinishCall.PORTAL_USER_ID,
+                "DIRECTION": resultGetActivity.DIRECTION,
+                "TYPE": resultGetActivity.PROVIDER_TYPE_ID,
+                "COMMUNICATIONS": [{
+                    "VALUE": resultFinishCall.PHONE_NUMBER,
+                    "ENTITY_ID": resultFinishCall.CRM_ENTITY_ID,
+                    "ENTITY_TYPE_ID": resultFinishCall.CRM_ENTITY_TYPE
+                }],
+                "SUBJECT": `Входящий от ${resultFinishCall.PHONE_NUMBER}`,
+                "COMPLETED": "N",
+                "PRIORITY": resultGetActivity.PRIORITY,
+                "DESCRIPTION": "Пропущенный звонок",
+                "DESCRIPTION_TYPE": resultGetActivity.DESCRIPTION_TYPE,
+                "START_TIME": resultGetActivity.START_TIME,
+                "END_TIME": resultGetActivity.END_TIME,
+                "DEADLINE": resultGetActivity.DEADLINE
+            }
+        };
+
+        try {
+            let result = await this.sendAxios('crm.activity.add', json)
+            logger.info(`Результат создание задачи на перезвон в таймлайне ${util.inspect(result)}`);
+
+        } catch (e) {
+            logger.error(e);
+        }
+
+    };
 
 };
 
