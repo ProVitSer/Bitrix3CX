@@ -2,3 +2,5 @@ node_modules
 config*
 info*
 logs*
+test*
+db.json
