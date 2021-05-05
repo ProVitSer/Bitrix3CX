@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-expressions */
 "use strict"; // eslint-disable-line
-
 const namiLib = require('nami');
 const util = require('util');
 const moment = require('moment');
@@ -59,7 +58,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.post(`/${config.webhookUrl}*`, async(req, res) => {
+app.post(`/${config.url.webhookUrl}*`, async(req, res) => {
     try {
         if (req.body.event == 'ONEXTERNALCALLSTART' && req.body.auth.application_token == config.bitrix.token) {
             res.status(200).end();
@@ -92,23 +91,6 @@ async function createTaskOnMissedCall(isAnswered, bitrixUserId, incomingNumber) 
         logger.error(`Ошибка создание задачи по пропущенному вызову ${util.inspect(e)}`);
     }
 }
-
-/*
-async function sendInfoToBitrix(bitrixUserID, incomingNumber, bitrixIDTypeCall, timeStartCall, billsec, isAnswered, recordingUrl) {
-    try {
-        // let incomingNumberMod = `+${incomingNumber}`;
-        //const incomingNumberMod = `${incomingNumber}`;
-        const incomingNumberMod = await validateNumber(incomingNumber);
-        const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserID, incomingNumberMod, bitrixIDTypeCall, timeStartCall);
-        logger.info(`Получен результат регистрации входящего вызова ${util.inspect(resultRegisterCall)}`);
-        const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall, bitrixUserID, billsec, isAnswered, bitrixIDTypeCall, recordingUrl);
-        logger.info(`Получен результат завершения входящего вызова ${util.inspect(resultFinishCall)}`);
-        //createTaskOnMissedCall(isAnswered, bitrixUserID, incomingNumber);
-    } catch (e) {
-        logger.error(`Ошибка регистрации в Битрикс локального вызова  ${e}`);
-    }
-}
-*/
 
 async function sendInfoByOutgoingCall({
     exten,
