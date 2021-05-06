@@ -1,41 +1,45 @@
 {
-  "name": "bitrix3cx",
-  "version": "1.0.0",
-  "description": "Модуль интеграции IP АТС 3CX с Bitrix24",
-  "main": "serever.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ProVitSer/Bitrix3CX.git"
-  },
-  "keywords": [
-    "voip",
-    "3cx",
-    "bitrix"
-  ],
-  "author": "ProVitSer",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ProVitSer/Bitrix3CX/issues"
-  },
-  "homepage": "https://github.com/ProVitSer/Bitrix3CX#readme",
-  "devDependencies": {
-    "eslint": "^7.23.0",
-    "eslint-config-airbnb": "^18.2.1"
-  },
-  "dependencies": {
-    "axios": "^0.21.1",
-    "bluebird": "^3.7.2",
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "http": "^0.0.1-security",
-    "log4js": "^6.3.0",
-    "lowdb": "^1.0.0",
-    "moment": "^2.29.1",
-    "nami": "^0.7.2",
-    "pg-promise": "^10.9.5",
-    "util": "^0.12.3"
-  }
+    "name": "bitrix3cx",
+    "version": "1.0.0",
+    "description": "Модуль интеграции IP АТС 3CX с Bitrix24",
+    "main": "serever.js",
+    "scripts": {
+        "test": "mocha --timeout 20000 ./test/test.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ProVitSer/Bitrix3CX.git"
+    },
+    "keywords": [
+        "voip",
+        "3cx",
+        "bitrix"
+    ],
+    "author": "ProVitSer",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/ProVitSer/Bitrix3CX/issues"
+    },
+    "homepage": "https://github.com/ProVitSer/Bitrix3CX#readme",
+    "devDependencies": {
+        "chai": "^4.3.4",
+        "eslint": "^7.23.0",
+        "eslint-config-airbnb": "^18.2.1",
+        "mocha": "^8.3.2",
+        "request": "^2.88.2",
+        "supertest": "^6.1.3"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "bluebird": "^3.7.2",
+        "body-parser": "^1.19.0",
+        "express": "^4.17.1",
+        "http": "^0.0.1-security",
+        "log4js": "^6.3.0",
+        "lowdb": "^1.0.0",
+        "moment": "^2.29.1",
+        "nami": "^0.7.2",
+        "pg-promise": "^10.9.5",
+        "util": "^0.12.3"
+    }
 }
