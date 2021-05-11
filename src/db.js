@@ -116,6 +116,18 @@ const getDepartmentIdByCallId = (callId, type = 'department') => new Promise((re
     }
 })
 
+const getTimeZoneByCallId = (callId, type = 'department') => new Promise((resolve, reject) => {
+    const resultSearch = db.get(type)
+        .find({ trunkNumber: callId })
+        .value()
+    if (!resultSearch) {
+        logger.error(`[DB] Error поиска временной зоны по номеру транка ${util.inspect(resultSearch)}`);
+        reject('[DB] getTimeZoneByCallId Error!', resultSearch)
+    } else {
+        resolve(resultSearch.timeZone)
+    }
+})
+
 const getTypeCallProcessing = (callId, type = 'department') => new Promise((resolve, reject) => {
     const resultSearch = db.get(type)
         .find({ trunkNumber: callId })
@@ -150,5 +162,6 @@ module.exports = {
     getExtenByBitrixId,
     getDepartmentIdByCallId,
     getTypeCallProcessing,
-    getShowUser
+    getShowUser,
+    getTimeZoneByCallId
 }

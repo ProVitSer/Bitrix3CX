@@ -2,6 +2,7 @@
 const axios = require('axios'),
     util = require('util'),
     moment = require('moment'),
+    momentTz = require('moment-timezone'),
     logger = require(`../logger/logger`),
     config = require(`../config/config`);
 
@@ -46,11 +47,13 @@ class Bitrix {
     }
 
     async externalCallRegister(...params) {
+        const timeZoneTime = momentTz.tz(params[3], params[5]);
+        const time = timeZoneTime.format();
         const json = {
             "USER_ID": params[0],
             "PHONE_NUMBER": params[1],
             "TYPE": params[2],
-            "CALL_START_DATE": params[3],
+            "CALL_START_DATE": time,
             "CRM_CREATE": params[4],
             "SHOW": false
         };
