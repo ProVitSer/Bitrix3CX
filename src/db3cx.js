@@ -7,7 +7,7 @@ const db = require('../models/db'),
 //Поиск ID первого вхождения вызова по внешнему номеру 
 async function searchFirstIncomingId(incomingNumber) {
     try {
-        let first3CXId = await db.any(`SELECT id FROM cl_party_info WHERE caller_number like '${incomingNumber}' ORDER BY id DESC LIMIT 1`);
+        const first3CXId = await db.any(`SELECT id FROM cl_party_info WHERE caller_number like '${incomingNumber}' ORDER BY id DESC LIMIT 1`);
         logger.info(`searchFirstIncomingId ${util.inspect(first3CXId)}`);
         return first3CXId;
     } catch (e) {
@@ -18,7 +18,7 @@ async function searchFirstIncomingId(incomingNumber) {
 //Поиск уникального CallID вызова по ID первому вхождению
 async function searchIncomingCallId(first3CXId) {
     try {
-        let callInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${first3CXId}`);
+        const callInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${first3CXId}`);
         logger.info(`searchIncomingCallId ${util.inspect(callInfo)}`);
         return callInfo;
     } catch (e) {
@@ -29,7 +29,7 @@ async function searchIncomingCallId(first3CXId) {
 //Поиск итоговой информации по вызову 
 async function searchIncomingInfoByLocalCall(end3CXId) {
     try {
-        let incomingInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${end3CXId}`);
+        const incomingInfo = await db.any(`SELECT call_id,recording_url FROM cl_participants WHERE info_id = ${end3CXId}`);
         logger.info(`searchIncomingInfoByLocalCall ${util.inspect(incomingInfo)}`);
         return incomingInfo;
     } catch (e) {
@@ -40,7 +40,7 @@ async function searchIncomingInfoByLocalCall(end3CXId) {
 //Поиск промежуточного ID по вызову
 async function searchEndIncomingId(callId) {
     try {
-        let end3CXId = await db.any(`SELECT info_id FROM cl_participants WHERE call_id = ${callId} ORDER BY info_id DESC LIMIT 1`);
+        const end3CXId = await db.any(`SELECT info_id FROM cl_participants WHERE call_id = ${callId} ORDER BY info_id DESC LIMIT 1`);
         logger.info(`searchEndIncomingId ${util.inspect(end3CXId)}`);
         return end3CXId;
     } catch (e) {
@@ -51,7 +51,7 @@ async function searchEndIncomingId(callId) {
 //Поиск итоговой информации по вызову 
 async function searchCallInfo(callId) {
     try {
-        let callInfo = await db.any(`SELECT start_time, talking_dur, is_answered FROM public.cl_calls where id = ${callId}`);
+        const callInfo = await db.any(`SELECT start_time, talking_dur, is_answered FROM public.cl_calls where id = ${callId}`);
         logger.info(`searchCallInfo ${util.inspect(callInfo)}`);
         return callInfo;
     } catch (e) {
@@ -62,7 +62,7 @@ async function searchCallInfo(callId) {
 //Поиск последнего ответившего\не по вызову при групповом вызове
 async function searchLastUserRing(end3CXId) {
     try {
-        let lastCallUser = await db.any(`SELECT dn FROM cl_party_info WHERE id = ${end3CXId}`);
+        const lastCallUser = await db.any(`SELECT dn FROM cl_party_info WHERE id = ${end3CXId}`);
         logger.info(`searchLastUserRing ${util.inspect(lastCallUser)}`);
         return lastCallUser;
     } catch (e) {
@@ -74,7 +74,7 @@ async function searchLastUserRing(end3CXId) {
 async function search3cxQueueCall(incomingNumber) {
     try {
         incomingNumber = incomingNumber.trim();
-        let callInfo = await db.any(`SELECT to_dialednum FROM public.callcent_queuecalls where from_userpart like '%${incomingNumber}'  ORDER BY idcallcent_queuecalls DESC LIMIT 1;`);
+        const callInfo = await db.any(`SELECT to_dialednum FROM public.callcent_queuecalls where from_userpart like '%${incomingNumber}'  ORDER BY idcallcent_queuecalls DESC LIMIT 1;`);
         logger.info(`search3cxQueueCall ${util.inspect(callInfo)}`);
         return callInfo[0].to_dialednum;
     } catch (e) {

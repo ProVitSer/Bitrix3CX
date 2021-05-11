@@ -32,12 +32,12 @@ class Bitrix {
     }
 
     async searchUser(...params) {
-        let json = {
+        const json = {
             "PHONE_NUMBER": params[0]
         };
 
         try {
-            let { result } = await this.sendAxios('telephony.externalCall.searchCrmEntities', json)
+            const { result } = await this.sendAxios('telephony.externalCall.searchCrmEntities', json)
             logger.info(`Результат поиска входящего лида ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -46,7 +46,7 @@ class Bitrix {
     }
 
     async externalCallRegister(...params) {
-        let json = {
+        const json = {
             "USER_ID": params[0],
             "PHONE_NUMBER": params[1],
             "TYPE": params[2],
@@ -56,7 +56,7 @@ class Bitrix {
         };
         logger.info(json);
         try {
-            let { result } = await this.sendAxios('telephony.externalcall.register.json', json)
+            const { result } = await this.sendAxios('telephony.externalcall.register.json', json)
             logger.info(`Результат регистрации вызова ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -65,7 +65,7 @@ class Bitrix {
     }
 
     async externalCallFinish(...params) {
-        let json = {
+        const json = {
             "CALL_ID": params[0],
             "USER_ID": params[1],
             "DURATION": params[2],
@@ -76,7 +76,7 @@ class Bitrix {
         logger.info(json);
 
         try {
-            let { result } = await this.sendAxios('telephony.externalcall.finish', json)
+            const { result } = await this.sendAxios('telephony.externalcall.finish', json)
             logger.info(`Результат завершения вызова ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -85,8 +85,8 @@ class Bitrix {
     }
 
     async createTask(...params) {
-        let daedline = moment(new Date).add(2, 'minutes').format('YYYY-MM-DD H:mm:ss');
-        let json = {
+        const daedline = moment(new Date).add(2, 'minutes').format('YYYY-MM-DD H:mm:ss');
+        const json = {
             "fields": {
                 "TITLE": "Пропущенный вызов",
                 "RESPONSIBLE_ID": params[0],
@@ -98,7 +98,7 @@ class Bitrix {
         };
 
         try {
-            let { result } = await this.sendAxios('tasks.task.add', json)
+            const { result } = await this.sendAxios('tasks.task.add', json)
             logger.info(`Результат создания задачи  ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -107,12 +107,12 @@ class Bitrix {
     }
 
     async taskStatus(...params) {
-        let json = {
+        const json = {
             "taskId": params[0]
         }
 
         try {
-            let { result } = await this.sendAxios('tasks.task.get', json)
+            const { result } = await this.sendAxios('tasks.task.get', json)
             if (result.task.status == '2') {
                 logger.info(`Задача просрочена ${params[0]}`);
                 this.updateTaskResponsibleId(params[0]);
@@ -125,7 +125,7 @@ class Bitrix {
     }
 
     async updateTaskResponsibleId(...params) {
-        let json = {
+        const json = {
             "taskId": params[0],
             "fields": {
                 "RESPONSIBLE_ID": "2255"
@@ -133,7 +133,7 @@ class Bitrix {
         };
 
         try {
-            let { result } = await this.sendAxios('tasks.task.update', json)
+            const { result } = await this.sendAxios('tasks.task.update', json)
             logger.info(`Изменение ответственного по задаче ${util.inspect(result)}`);
 
         } catch (e) {
@@ -142,14 +142,14 @@ class Bitrix {
     }
 
     async externalCallShow(...params) {
-        let json = {
+        const json = {
             "CALL_ID": params[0],
             "USER_ID": params[1]
 
         };
 
         try {
-            let { result } = await this.sendAxios('telephony.externalcall.show', json)
+            const { result } = await this.sendAxios('telephony.externalcall.show', json)
             logger.info(`Показ карточки позователям ${util.inspect(result)}`);
 
         } catch (e) {
@@ -158,13 +158,13 @@ class Bitrix {
     }
 
     async externalCallHide(...params) {
-        let json = {
+        const json = {
             "CALL_ID": params[0],
             "USER_ID": params[1]
         };
 
         try {
-            let { result } = await this.sendAxios('telephony.externalcall.hide', json)
+            const { result } = await this.sendAxios('telephony.externalcall.hide', json)
             logger.info(`Завершение показа карточки пользователям ${util.inspect(result)}`);
 
         } catch (e) {
@@ -174,7 +174,7 @@ class Bitrix {
     }
 
     async getUserIdDepartment(id) {
-        let json = {
+        const json = {
             "FILTER": {
                 "UF_DEPARTMENT": id,
                 "WORK_POSITION": this.departmentName
@@ -182,7 +182,7 @@ class Bitrix {
         };
 
         try {
-            let { result } = await this.sendAxios('user.get', json)
+            const { result } = await this.sendAxios('user.get', json)
             logger.info(`Результат запроса id ответственного по департаменту ${util.inspect(result)}`);
             if (result.length != 0) {
                 return result[0].ID;
@@ -195,14 +195,14 @@ class Bitrix {
     }
 
     async getlUser(start = 0) {
-        let json = {
+        const json = {
             "FILTER": {
                 "ACTIVE": "true"
             }
         };
 
         try {
-            let result = await this.sendAxios(`user.get?start=${start}`, json)
+            const result = await this.sendAxios(`user.get?start=${start}`, json)
             if (result.length != 0) {
                 return result;
             } else {
@@ -214,12 +214,12 @@ class Bitrix {
     }
 
     async getActivity(id) {
-        let json = {
+        const json = {
             "ID": id
         };
 
         try {
-            let { result } = await this.sendAxios('crm.activity.get', json)
+            const { result } = await this.sendAxios('crm.activity.get', json)
             logger.info(`Активность по вызову в таймлайне ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -228,12 +228,12 @@ class Bitrix {
     }
 
     async deleteActivity(id) {
-        let json = {
+        const json = {
             "ID": id
         };
 
         try {
-            let result = await this.sendAxios('crm.activity.delete', json)
+            const result = await this.sendAxios('crm.activity.delete', json)
             logger.info(`Результат удаление активности по вызову ${util.inspect(result)}`);
             return result;
         } catch (e) {
@@ -243,7 +243,7 @@ class Bitrix {
     }
 
     async updateActivityCommentDescription(...params) {
-        let json = {
+        const json = {
             "ID": params[0],
             "fields": {
                 "SUBJECT": params[1],
@@ -252,7 +252,7 @@ class Bitrix {
         };
 
         try {
-            let result = await this.sendAxios('crm.activity.update', json)
+            const result = await this.sendAxios('crm.activity.update', json)
             logger.info(`Результат обновление активности в таймлайне ${util.inspect(result)}`);
 
         } catch (e) {
@@ -262,7 +262,7 @@ class Bitrix {
     }
 
     async updateActivityAuthorResponsibleUser(...params) {
-        let json = {
+        const json = {
             "ID": params[0],
             "fields": {
                 "AUTHOR_ID": params[1],
@@ -271,7 +271,7 @@ class Bitrix {
         };
 
         try {
-            let result = await this.sendAxios('crm.activity.update', json)
+            const result = await this.sendAxios('crm.activity.update', json)
             logger.info(`Результат AUTHOR_ID RESPONSIBLE_ID по вызову из CRM  ${util.inspect(result)}`);
 
         } catch (e) {
@@ -281,7 +281,7 @@ class Bitrix {
     }
 
     async updateActivityReason(id) {
-        let json = {
+        const json = {
             "ID": id,
             "fields": {
                 "CALL_FAILED_CODE": "304"
@@ -299,7 +299,7 @@ class Bitrix {
     }
 
     async createActivity(resultGetActivity, resultFinishCall) {
-        let json = {
+        const json = {
             "fields": {
                 "OWNER_TYPE_ID": resultGetActivity.OWNER_TYPE_ID,
                 "OWNER_ID": resultGetActivity.OWNER_ID,
@@ -327,7 +327,7 @@ class Bitrix {
         };
 
         try {
-            let result = await this.sendAxios('crm.activity.add', json)
+            const result = await this.sendAxios('crm.activity.add', json)
             logger.info(`Результат создание задачи на перезвон в таймлайне ${util.inspect(result)}`);
 
         } catch (e) {
