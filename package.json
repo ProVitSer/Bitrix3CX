@@ -38,6 +38,7 @@
         "log4js": "^6.3.0",
         "lowdb": "^1.0.0",
         "moment": "^2.29.1",
+        "moment-timezone": "^0.5.33",
         "nami": "^0.7.2",
         "pg-promise": "^10.9.5",
         "util": "^0.12.3"
