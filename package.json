@@ -1,6 +1,6 @@
 {
     "name": "bitrix3cx",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "description": "Модуль интеграции IP АТС 3CX с Bitrix24",
     "main": "serever.js",
     "scripts": {
