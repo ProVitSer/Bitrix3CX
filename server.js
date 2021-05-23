@@ -94,6 +94,7 @@ async function sendInfoByOutgoingCall({
     exten,
     unicueid,
     extensionNumber,
+    trunkNumber,
     billsec,
     disposition,
     recording,
@@ -101,11 +102,12 @@ async function sendInfoByOutgoingCall({
     end,
 }) {
     try {
-        logger.info(`sendInfoByOutgoingCall ${exten}, ${unicueid}, ${extensionNumber}, ${billsec}, ${disposition}, ${recording}, ${start},${end}`);
+        logger.info(`sendInfoByOutgoingCall ${exten}, ${unicueid}, ${extensionNumber}, ${trunkNumber}, ${billsec}, ${disposition}, ${recording}, ${start},${end}`);
         //Поиск в БД информации сопоставления добавочного номера и ID Битрикс
         const bitrixUserId = await db.getBitrixIdByExten(extensionNumber);
+        const timeZone = await db.getTimeZoneByCallId(trunkNumber);
         const numberMod = await validateNumber(exten);
-        const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserId, numberMod, config.bitrix.outgoing, start, config.bitrix.createOutgoingLead);
+        const resultRegisterCall = await bitrix.externalCallRegister(bitrixUserId, numberMod, config.bitrix.outgoing, start, config.bitrix.createOutgoingLead, timeZone);
         logger.info(`Получен результат регистрации исходящего вызова ${util.inspect(resultRegisterCall)}`);
         const resultFinishCall = await bitrix.externalCallFinish(resultRegisterCall.CALL_ID, bitrixUserId, billsec, config.status[disposition], config.bitrix.outgoing, recording);
         logger.info(`Получен результат завершения исходящего вызова ${util.inspect(resultFinishCall)}`);
@@ -152,7 +154,8 @@ async function registerCallIdInBitrixAndShow({ unicueid, incomingNumber, callId 
         const numberMod = await validateNumber(incomingNumber); //Преобразование внешнего номера под нужный стандарт E164
         const bitrixTrunkId = await db.getDepartmentIdByCallId(callId); //Поиск ответственного по внешнему номеру. Возвращает ID пользователя Битрикс
         const usersArray = await db.getShowUser(callId); //Поиск пользователей по внешнему номеру, которым надо поднимать карточку в CRM
-        const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, config.bitrix.incoming, moment(new Date()).format('YYYY-MM-DD H:mm:ss'), config.bitrix.createIncomingLead); //Регистрация вызова в Битрикс
+        const timeZone = await db.getTimeZoneByCallId(callId);
+        const resultRegisterCall = await bitrix.externalCallRegister(bitrixTrunkId, numberMod, config.bitrix.incoming, moment(new Date()).format('YYYY-MM-DD H:mm:ss'), config.bitrix.createIncomingLead, timeZone); //Регистрация вызова в Битрикс
         logger.info(`Получен результат регистрации входящего вызова ${util.inspect(resultRegisterCall)}`);
         const resultShow = await bitrix.externalCallShow(resultRegisterCall.CALL_ID, usersArray); //Всплывающая карточка для массива пользователей
         logger.info(`Получен результат поднятия карточки ${util.inspect(resultShow)}`);

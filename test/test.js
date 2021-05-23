@@ -59,7 +59,7 @@ describe("Тестирование интеграции Битрикс", functio
         const resRegister = await bitrix.externalCallRegister('1', '+79104061420', '1123', moment().format('YYYY-MM-DD H:mm:ss'), false);
         assert.exists(resRegister.CALL_ID);
         console.log(`CallID вызова из Битрикса ${resRegister.CALL_ID}`);
-        bitrixCallId = resRegister.CALL_ID;
+        const bitrixCallId = resRegister.CALL_ID;
 
         const resOriginat = await request('http://localhost:3000')
             .post(`/${config.url.webhookUrl}`)

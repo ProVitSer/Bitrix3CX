@@ -8,13 +8,13 @@ const bitrix = new Bitrix();
 let bitrixStartPage = 0;
 
 //В БД заполняет параметры ID департамента и привязанный к нему транк. Производиться перебор всех id, запрос в Битрикс на ответственного по нему и заново формируется БД с привязкой
-async function updateTrynkInform() {
+async function updateTrunkInform() {
     try {
-        let resultSearchInDB = await db.getAllInfoByType('department');
+        const resultSearchInDB = await db.getAllInfoByType('department');
         for (const key of resultSearchInDB) {
-            let id = await bitrix.getUserIdDepartment(key.departmentId);
-            let resultDelete = await db.deleteRule('department', key.trunkNumber);
-            let resultInsertInDb = await db.insertInfoToDB('department', { "trunkNumber": key.trunkNumber, "departmentId": key.departmentId, "id": id, "callProcessing": key.callProcessing, "showUsers": key.showUsers });
+            const id = await bitrix.getUserIdDepartment(key.departmentId);
+            const resultDelete = await db.deleteRule('department', key.trunkNumber);
+            const resultInsertInDb = await db.insertInfoToDB('department', { "trunkNumber": key.trunkNumber, "departmentId": key.departmentId, "id": id, "callProcessing": key.callProcessing, "timeZone": key.timeZone, "showUsers": key.showUsers });
             logger.info(`Обновлям новые данные по привязки транка к ответственному по департаменту ${id}, ${resultDelete}, ${resultInsertInDb}`);
         }
         return true;
@@ -32,7 +32,7 @@ async function insertNewUserInDB(startPage) {
             await db.setEmptyProp();
         }
 
-        let resultSearchInDB = await bitrix.getlUser(startPage);
+        const resultSearchInDB = await bitrix.getlUser(startPage);
         logger.info(resultSearchInDB);
         for (const user of resultSearchInDB.result) {
             if (user.UF_PHONE_INNER != null) {
@@ -51,7 +51,7 @@ async function insertNewUserInDB(startPage) {
 
 (async function() {
     try {
-        await updateTrynkInform();
+        await updateTrunkInform();
         await insertNewUserInDB(bitrixStartPage);
     } catch (e) {
         logger.error(`Проблемы с запуском функции выгрузки ${e}`);
