@@ -8,7 +8,7 @@ const bitrix = new Bitrix();
 let bitrixStartPage = 0;
 
 //В БД заполняет параметры ID департамента и привязанный к нему транк. Производиться перебор всех id, запрос в Битрикс на ответственного по нему и заново формируется БД с привязкой
-async function updateTrynkInform() {
+async function updateTrunkInform() {
     try {
         const resultSearchInDB = await db.getAllInfoByType('department');
         for (const key of resultSearchInDB) {
@@ -51,7 +51,7 @@ async function insertNewUserInDB(startPage) {
 
 (async function() {
     try {
-        await updateTrynkInform();
+        await updateTrunkInform();
         await insertNewUserInDB(bitrixStartPage);
     } catch (e) {
         logger.error(`Проблемы с запуском функции выгрузки ${e}`);
